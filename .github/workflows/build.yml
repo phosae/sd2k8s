@@ -1,0 +1,76 @@
+name: Distribution Builder
+
+on:
+  push:
+    branches:
+    - master
+    - main
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}
+    steps:
+    - name: Checkout sd2k8s
+      uses: actions/checkout@master
+      with:
+        repository: phosae/sd2k8s
+        path: ./sd2k8s
+
+    - name: Put version to env
+      run: |
+        echo "VERSION=$(cat ./sd2k8s/VERSION)" >> $GITHUB_ENV
+
+    - name: Set up JDK 8
+      uses: actions/setup-java@v3.8.0
+      with:
+        java-version: 8
+        
+    - name: Build Simple Eureka Server
+      run: mvn -B package --file sd2k8s/simple-eureka-server/pom.xml && mv sd2k8s/simple-eureka-server/target/*.jar sd2k8s/dist/simple-eureka-server/simple-eureka-server.jar
+    - name: Build Eureka Callee
+      run: mvn -B package --file sd2k8s/eureka-callee/pom.xml &&  mv sd2k8s/eureka-callee/target/*.jar sd2k8s/dist/eureka-callee/eureka-callee.jar
+    - name: Build Eureka Caller
+      run: mvn -B package --file sd2k8s/eureka-caller/pom.xml && mv sd2k8s/eureka-caller/target/*.jar sd2k8s/dist/eureka-caller/eureka-caller.jar
+
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v2
+    - name: Set up Docker Buildx
+      id: buildx
+      uses: docker/setup-buildx-action@v2
+    - name: Login to DockerHub
+      uses: docker/login-action@v2
+      with:
+        username: zengxu
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+        
+    - name: Build And Push simple-eureka-server
+      uses: docker/build-push-action@v3
+      with:
+        context: ./sd2k8s/dist/simple-eureka-server
+        tags: |
+          zengxu/simple-eureka-server:${{ env.VERSION }}
+        platforms: |
+          linux/amd64,linux/arm64
+        push: true
+    - name: Build And Push eureka-callee
+      uses: docker/build-push-action@v3
+      with:
+        context: ./sd2k8s/dist/eureka-callee
+        tags: |
+          zengxu/eureka-callee:${{ env.VERSION }}
+        platforms: |
+          linux/amd64,linux/arm64
+        push: true
+    - name: Build And Push eureka-caller
+      uses: docker/build-push-action@v3
+      with:
+        context: ./sd2k8s/dist/eureka-caller
+        tags: |
+          zengxu/eureka-caller:${{ env.VERSION }}
+        platforms: |
+          linux/amd64,linux/arm64
+        push: true
