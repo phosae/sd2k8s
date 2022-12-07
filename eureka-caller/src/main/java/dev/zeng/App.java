@@ -11,10 +11,6 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.inject.Inject;
 
 import okhttp3.*;
-
-/**
- * Hello world!
- */
 @SpringBootApplication
 @RestController
 public class App {
