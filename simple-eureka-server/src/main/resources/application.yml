@@ -1,0 +1,68 @@
+---
+server:
+  port: 8761
+spring:
+  profiles: k8s-peer1
+eureka:
+  instance:
+    hostname: k8s-peer1
+    appname: k8s-eureka
+  client:
+    serviceUrl:
+      k8s-zone: http://k8s-peer1:8761/eureka/,http://k8s-peer2:8762/eureka/
+    availability-zones:
+      shanghai: k8s-zone
+    region: shanghai
+  server:
+    enable-self-preservation: false
+---
+server:
+  port: 8762
+spring:
+  profiles: k8s-peer2
+eureka:
+  instance:
+    hostname: k8s-peer2
+    appname: k8s-eureka
+  client:
+    serviceUrl:
+      k8s-zone: http://k8s-peer1:8761/eureka/,http://k8s-peer2:8762/eureka/
+    availability-zones:
+      shanghai: k8s-zone
+    region: shanghai
+  server:
+    enable-self-preservation: false
+---
+server:
+  port: 8763
+spring:
+  profiles: ecs-peer1
+eureka:
+  instance:
+    hostname: ecs-peer1
+    appname: ecs-eureka
+  client:
+    fetch-registry: false
+    serviceUrl:
+      ecs-zone: http://ecs-peer1:8763/eureka/,http://ecs-peer2:8764/eureka/
+      k8s-zone: http://k8s-peer1:8761/eureka/,http://k8s-peer2:8762/eureka/
+    availability-zones:
+      shanghai: ecs-zone,k8s-zone
+    region: shanghai
+---
+server:
+  port: 8764
+spring:
+  profiles: ecs-peer2
+eureka:
+  instance:
+    hostname: ecs-peer2
+    appname: ecs-eureka
+  client:
+    fetch-registry: false
+    serviceUrl:
+      ecs-zone: http://ecs-peer1:8763/eureka/,http://ecs-peer2:8764/eureka/
+      k8s-zone: http://k8s-peer1:8761/eureka/,http://k8s-peer2:8762/eureka/
+    availability-zones:
+      shanghai: ecs-zone,k8s-zone
+    region: shanghai
