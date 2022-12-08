@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.inject.Inject;
 
 import okhttp3.*;
+
 @SpringBootApplication
 @RestController
 public class App {
@@ -22,7 +23,8 @@ public class App {
     @RequestMapping("/")
     public String home() throws Exception {
         InstanceInfo instanceInfo = this.discoveryClient.getNextServerFromEureka("CALLEE", false);
-        Request.Builder builder = new Request.Builder().url(instanceInfo.getHomePageUrl());
+        String u = "http://" + instanceInfo.getIPAddr() + ":" + instanceInfo.getPort() + "/";
+        Request.Builder builder = new Request.Builder().url(u);
         Request request = builder.get().build();
         try (Response resp = okHttpClient.newCall(request).execute()) {
             return resp.body().string();
